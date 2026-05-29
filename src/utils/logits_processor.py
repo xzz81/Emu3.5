@@ -20,6 +20,19 @@ EOF = 151847
 BOV = 151854
 
 
+def normalized_entropy_from_finite_scores(scores: torch.Tensor) -> Tuple[torch.Tensor, int]:
+    """Return normalized entropy and finite candidate count for one score row."""
+    score_vec = scores[0] if scores.dim() == 2 else scores
+    finite_scores = score_vec[torch.isfinite(score_vec)].float()
+    candidate_count = int(finite_scores.numel())
+    if candidate_count <= 1:
+        return score_vec.new_tensor(0.0, dtype=torch.float32), candidate_count
+    probs = torch.softmax(finite_scores, dim=-1)
+    entropy = -(probs * torch.log(probs.clamp_min(1e-12))).sum()
+    normalized = (entropy / math.log(candidate_count)).clamp(0.0, 1.0)
+    return normalized, candidate_count
+
+
 class UnbatchedClassifierFreeGuidanceLogitsForVisualTokenProcessor(LogitsProcessor):
 
     def __init__(
@@ -38,6 +51,7 @@ class UnbatchedClassifierFreeGuidanceLogitsForVisualTokenProcessor(LogitsProcess
         target_height: Optional[int] = None,  # added parameter is used to specify the target height
         target_width: Optional[int] = None,   # added parameter is used to specify the target width
         image_cfg_scale: float = 1.0,
+        trace_collector: Optional[List[Dict[str, Union[float, int, bool]]]] = None,
     ):
         self.guidance_scale = guidance_scale
         self.model = model
@@ -104,6 +118,8 @@ class UnbatchedClassifierFreeGuidanceLogitsForVisualTokenProcessor(LogitsProcess
         self.unconditional_type = unconditional_type
 
         self.text_segment = 0
+        self.trace_collector = trace_collector
+        self._active_trace_record = None
 
         if IMG in unconditional_ids[0]:
             self.parse_hw(unconditional_ids)
@@ -151,6 +167,15 @@ class UnbatchedClassifierFreeGuidanceLogitsForVisualTokenProcessor(LogitsProcess
         return out.logits[:, -1]
 
     def __call__(self, input_ids, scores):
+        if self.trace_collector is not None:
+            self._active_trace_record = {
+                "step": len(self.trace_collector),
+                "cfg_js": None,
+                "u_cfg": None,
+                "cfg_available": False,
+                "u_visual_full": None,
+                "visual_full_candidate_count": None,
+            }
         # IMAGE MODE
         if input_ids[0][-1] == BOI:
             self.set_unconditional_context(input_ids)
@@ -167,6 +192,10 @@ class UnbatchedClassifierFreeGuidanceLogitsForVisualTokenProcessor(LogitsProcess
             scores = self.in_image_logits_processor(input_ids, scores)
         else:
             scores = self.in_text_logits_processor(input_ids, scores)
+
+        if self.trace_collector is not None:
+            self.trace_collector.append(self._active_trace_record)
+            self._active_trace_record = None
 
         return scores
 
@@ -312,6 +341,7 @@ class UnbatchedClassifierFreeGuidanceLogitsForVisualTokenProcessor(LogitsProcess
         match self.unconditional_type:
             case "no_text":
                 # applying no_text CFG
+                self.record_cfg_js(scores, unc_scores)
                 scores = F.log_softmax(scores, dim=-1)
                 unc_scores = F.log_softmax(unc_scores, dim=-1)
                 # c = unc + cfg * (c - unc)
@@ -320,6 +350,7 @@ class UnbatchedClassifierFreeGuidanceLogitsForVisualTokenProcessor(LogitsProcess
             case "no_text_img_cfg":
                 # applying no_text and no_any CFG
                 no_text_scores, no_any_scores = unc_scores
+                self.record_cfg_js(scores, no_text_scores)
                 scores = F.log_softmax(scores, dim=-1)
                 no_text_scores = F.log_softmax(no_text_scores, dim=-1)
                 no_any_scores = F.log_softmax(no_any_scores, dim=-1)
@@ -328,6 +359,24 @@ class UnbatchedClassifierFreeGuidanceLogitsForVisualTokenProcessor(LogitsProcess
                 return scores
             case _:
                 raise NotImplementedError(f"Unsupported unconditional type {self.unconditional_type}")
+
+    def record_cfg_js(self, cond_scores, unc_scores):
+        if self._active_trace_record is None:
+            return
+        cond_log_probs = F.log_softmax(cond_scores.float(), dim=-1)
+        unc_log_probs = F.log_softmax(unc_scores.float(), dim=-1)
+        cond_probs = cond_log_probs.exp()
+        unc_probs = unc_log_probs.exp()
+        mix_probs = 0.5 * (cond_probs + unc_probs)
+        mix_log_probs = torch.log(mix_probs.clamp_min(1e-12))
+        js = 0.5 * (
+            (cond_probs * (cond_log_probs - mix_log_probs)).sum(dim=-1)
+            + (unc_probs * (unc_log_probs - mix_log_probs)).sum(dim=-1)
+        )
+        u_cfg = (js / math.log(2.0)).clamp(0.0, 1.0)
+        self._active_trace_record["cfg_js"] = float(u_cfg.detach().cpu().mean().item())
+        self._active_trace_record["u_cfg"] = self._active_trace_record["cfg_js"]
+        self._active_trace_record["cfg_available"] = True
 
     def set_unconditional_context(self, input_ids):
         self.in_image = True
@@ -415,6 +464,7 @@ class UnbatchedClassifierFreeGuidanceLogitsForVisualTokenWithDifferentialTopKPro
         image_top_p: float = 1.0,
         text_temperature: float = 1.0,
         image_temperature: float = 1.0,
+        trace_collector: Optional[List[Dict[str, Union[float, int, bool]]]] = None,
         **kwargs,
     ):
 
@@ -432,6 +482,8 @@ class UnbatchedClassifierFreeGuidanceLogitsForVisualTokenWithDifferentialTopKPro
             unconditional_type=unconditional_type,
             target_height=target_height,
             target_width=target_width,
+            image_cfg_scale=image_cfg_scale,
+            trace_collector=trace_collector,
             **kwargs,
         )
 
@@ -493,6 +545,11 @@ class UnbatchedClassifierFreeGuidanceLogitsForVisualTokenWithDifferentialTopKPro
         """Override: add differential top-k for image tokens."""
         # apply base processing first
         scores = super().in_image_logits_processor(input_ids, scores)
+
+        if self._active_trace_record is not None:
+            u_full, candidate_count = normalized_entropy_from_finite_scores(scores.detach())
+            self._active_trace_record["u_visual_full"] = float(u_full.detach().cpu().item())
+            self._active_trace_record["visual_full_candidate_count"] = candidate_count
 
         # then apply differential top-k for image tokens
         scores = self.apply_differential_topk(scores, is_image_generation=True)

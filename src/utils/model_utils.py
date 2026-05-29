@@ -25,6 +25,16 @@ def build_emu3p5(
 
     print(device_map)
 
+    attn_implementation = kwargs.pop("attn_implementation", None)
+    if attn_implementation is None:
+        try:
+            import flash_attn  # noqa: F401
+
+            attn_implementation = "flash_attention_2"
+        except Exception:
+            attn_implementation = "eager"
+    print(f"[INFO] attn_implementation={attn_implementation}")
+
     # MLLM
     model_config = Emu3Config.from_pretrained(
         model_path,
@@ -35,8 +45,7 @@ def build_emu3p5(
         config=model_config,
         torch_dtype=torch.bfloat16,
         device_map=device_map,
-        attn_implementation="flash_attention_2",
-        # attn_implementation="eager", # if you cann't install flash_attention
+        attn_implementation=attn_implementation,
     )
     model.eval()
     

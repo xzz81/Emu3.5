@@ -16,6 +16,7 @@ from transformers.generation import LogitsProcessorList
 from .logits_processor import (
     UnbatchedClassifierFreeGuidanceLogitsForVisualTokenWithDifferentialTopKProcessor
 )
+from .entropy_trace import build_trace_records
 
 try:
     from transformers import TextIteratorStreamer
@@ -234,6 +235,56 @@ def non_streaming_generate(
     return gen_token_ids[0].detach().cpu().numpy()
 
 
+def generate_with_entropy_trace(
+    cfg,
+    model,
+    tokenizer,
+    input_ids,
+    unconditional_ids,
+    full_unconditional_ids=None,
+    force_same_image_size=True,
+    sample_id="sample",
+):
+    input_ids_len = input_ids.shape[1]
+    cfg_trace = []
+    logits_processor = LogitsProcessorList()
+    logits_processor.append(
+        build_logits_processor(
+            cfg,
+            unconditional_ids,
+            model,
+            tokenizer,
+            full_unconditional_ids,
+            force_same_image_size=force_same_image_size,
+            trace_collector=cfg_trace,
+        )
+    )
+    generation_config = GenerationConfig(
+        **cfg.sampling_params,
+        pad_token_id=cfg.special_token_ids["PAD"],
+        eos_token_id=cfg.special_token_ids["EOS"],
+    )
+    outputs = model.generate(
+        input_ids,
+        generation_config,
+        logits_processor=logits_processor,
+        return_dict_in_generate=True,
+        output_scores=True,
+    )
+    token_ids = outputs.sequences[:, input_ids_len:]
+    gen_token_ids = token_ids[0].detach().cpu()
+    records = build_trace_records(
+        outputs.scores,
+        gen_token_ids,
+        sample_id=sample_id,
+        tokenizer=tokenizer,
+        special_token_ids=cfg.special_token_ids,
+        cfg_trace=cfg_trace,
+        metadata={"task": getattr(cfg, "task_type", "unknown")},
+    )
+    return gen_token_ids.tolist(), records
+
+
 def build_logits_processor(
     cfg,
     unconditional_ids,
@@ -241,6 +292,7 @@ def build_logits_processor(
     tokenizer,
     full_unconditional_ids=None,
     force_same_image_size=True,
+    trace_collector=None,
 ):
     logits_processor = UnbatchedClassifierFreeGuidanceLogitsForVisualTokenWithDifferentialTopKProcessor(
         guidance_scale=cfg.classifier_free_guidance,
@@ -260,6 +312,7 @@ def build_logits_processor(
         image_top_p=cfg.sampling_params["image_top_p"],
         image_temperature=cfg.sampling_params["image_temperature"],
         force_same_image_size=force_same_image_size,
+        trace_collector=trace_collector,
     )
     return logits_processor
 

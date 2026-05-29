@@ -8,7 +8,7 @@ cfg_name = Path(__file__).stem
 model_path = "BAAI/Emu3.5-Image" # download from hf
 vq_path = "BAAI/Emu3.5-VisionTokenizer" # download from hf
 
-tokenizer_path = "path_to_tokenizer"
+tokenizer_path = "./src/tokenizer_emu3_ibq"
 vq_type = "ibq"
 
 task_type = "x2i"
