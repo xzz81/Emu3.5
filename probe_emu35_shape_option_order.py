@@ -33,7 +33,7 @@ from compare_emu35_task_entropy import (  # noqa: E402
 from eval_emu35_synthetic_lora import load_model  # noqa: E402
 from train_emu35_synthetic_lora import build_tokenizer  # noqa: E402
 from src.utils.input_utils import build_image  # noqa: E402
-from src.utils.synthetic_entropy import (  # noqa: E402
+from src.utils.entropy_metrics import (  # noqa: E402
     summarize_token_entropy_trace,
     text_token_entropy_trace,
     write_entropy_trace,

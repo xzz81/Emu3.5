@@ -38,7 +38,7 @@ from bench_emu35_modal_memory import (  # noqa: E402
 from eval_emu35_synthetic_lora import load_model  # noqa: E402
 from train_emu35_synthetic_lora import build_prompt, build_tokenizer, synthetic_prompt  # noqa: E402
 from src.utils.generation_utils import multimodal_decode  # noqa: E402
-from src.utils.synthetic_entropy import semantic_entropy_from_distribution  # noqa: E402
+from src.utils.entropy_metrics import semantic_entropy_from_distribution  # noqa: E402
 from src.vision_tokenizer import build_vision_tokenizer  # noqa: E402
 
 

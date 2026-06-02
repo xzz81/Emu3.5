@@ -1,7 +1,7 @@
 # Copyright 2025 BAAI. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Entropy helpers for synthetic-concept text/image experiments.
+"""Entropy metrics for text, visual-token, and semantic analyses.
 
 This module keeps two notions separate:
 
@@ -121,6 +121,8 @@ def semantic_entropy_from_distribution(
     probs = np.asarray([float(distribution.get(option, 0.0)) for option in options], dtype=float)
     positive = probs[probs > 0]
     entropy = float(-(positive * np.log(positive)).sum()) if positive.size else 0.0
+    if abs(entropy) < 1e-12:
+        entropy = 0.0
     denom = math.log(len(options)) if len(options) > 1 else 1.0
     predicted = max(options, key=lambda option: distribution.get(option, 0.0))
     return {

@@ -43,7 +43,7 @@ if MODAL_APHASIA_ROOT.exists() and str(MODAL_APHASIA_ROOT) not in sys.path:
 from eval_emu35_synthetic_lora import load_model  # noqa: E402
 from train_emu35_synthetic_lora import build_prompt, build_tokenizer, synthetic_prompt  # noqa: E402
 from src.utils.generation_utils import multimodal_decode  # noqa: E402
-from src.utils.synthetic_entropy import (  # noqa: E402
+from src.utils.entropy_metrics import (  # noqa: E402
     attach_selected_tokens,
     entropy_from_logits,
     text_token_entropy_trace,
