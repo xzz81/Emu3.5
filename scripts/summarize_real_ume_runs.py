@@ -29,6 +29,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", default="outputs/emu3p5-image")
     parser.add_argument("--out-dir", default="../research_logs")
+    parser.add_argument("--run-id-contains", default=None)
     return parser.parse_args()
 
 
@@ -57,6 +58,35 @@ def count_token_text(records: Iterable[Mapping[str, Any]]) -> Dict[str, int]:
         text = str(row.get("token_text", ""))
         counts[text] = counts.get(text, 0) + 1
     return counts
+
+
+def boundary_window_stats(records: Sequence[Mapping[str, Any]], window: int = 3) -> Dict[str, Any]:
+    if not records:
+        return {
+            "boundary_window": window,
+            "boundary_events": 0,
+            "boundary_window_tokens": 0,
+            "boundary_mean_u_mod": "",
+            "boundary_max_u_mod": "",
+        }
+    boundary_steps = [
+        int(row.get("step", idx))
+        for idx, row in enumerate(records)
+        if bool(row.get("is_boundary")) or str(row.get("token_type")) == "structure"
+    ]
+    selected = set()
+    max_idx = len(records) - 1
+    for step in boundary_steps:
+        for idx in range(max(0, step - window), min(max_idx, step + window) + 1):
+            selected.add(idx)
+    values = [float(records[idx].get("u_mod", 0.0)) for idx in sorted(selected)]
+    return {
+        "boundary_window": window,
+        "boundary_events": len(boundary_steps),
+        "boundary_window_tokens": len(values),
+        "boundary_mean_u_mod": mean(values),
+        "boundary_max_u_mod": max(values) if values else "",
+    }
 
 
 def image_metadata(path: Path) -> Dict[str, Any]:
@@ -102,6 +132,15 @@ def sample_row(run_dir: Path, trace_path: Path, root: Path) -> Dict[str, Any]:
     ]
     all_umes = [float(record["ume"]) for record in records if record.get("ume") is not None]
     marker_counts = count_token_text(records)
+    terminal = records[-1] if records else {}
+    boundary_stats = boundary_window_stats(records)
+    terminal_text = str(terminal.get("token_text", ""))
+    if marker_counts.get("<|extra_204|>", 0) >= 1:
+        terminal_state = "eos"
+    elif terminal_text == "<|image end|>":
+        terminal_state = "stopped_after_image_end"
+    else:
+        terminal_state = f"ended_in_{terminal.get('segment', 'unknown')}"
 
     decoded_path = run_dir / "decoded" / f"{sample_id}_image_00.png"
     raw_path = run_dir / "raw_generations" / f"{sample_id}.txt"
@@ -117,8 +156,18 @@ def sample_row(run_dir: Path, trace_path: Path, root: Path) -> Dict[str, Any]:
         "sample_id": sample_id,
         "trace_path": str(trace_path),
         "decoded": bool(decoded_path.exists()),
+        "first_image_complete": marker_counts.get("<|image end|>", 0) >= 1,
         "image_complete": marker_counts.get("<|image end|>", 0) >= 1,
+        "completed_images": marker_counts.get("<|image end|>", 0),
+        "sequence_eos": marker_counts.get("<|extra_204|>", 0) >= 1,
         "eos": marker_counts.get("<|extra_204|>", 0) >= 1,
+        "terminal_step": terminal.get("step", ""),
+        "terminal_token_text": terminal.get("token_text", ""),
+        "terminal_token_type": terminal.get("token_type", ""),
+        "terminal_segment": terminal.get("segment", ""),
+        "terminal_state": terminal_state,
+        "stop_after_completed_images": records[0].get("stop_after_completed_images", "") if records else "",
+        "stop_after_eoi_extra_tokens": records[0].get("stop_after_eoi_extra_tokens", "") if records else "",
         "tokens": len(records),
         "visual_tokens": token_counts.get("visual", 0),
         "structure_tokens": token_counts.get("structure", 0),
@@ -142,6 +191,7 @@ def sample_row(run_dir: Path, trace_path: Path, root: Path) -> Dict[str, Any]:
         "raw_image_end_count": raw_counts["<|image end|>"],
         "raw_eol_count": raw_counts["<|extra_200|>"],
         "raw_eos_count": raw_counts["<|extra_204|>"],
+        **boundary_stats,
         **image_meta,
     }
 
@@ -150,8 +200,8 @@ def run_row(run_dir: Path, sample_rows: Sequence[Mapping[str, Any]]) -> Dict[str
     visual_means = [float(row["visual_mean_ume"]) for row in sample_rows if row["visual_mean_ume"] != ""]
     visual_p90s = [float(row["visual_p90_ume"]) for row in sample_rows if row["visual_p90_ume"] != ""]
     decoded_count = sum(1 for row in sample_rows if row["decoded"])
-    complete_count = sum(1 for row in sample_rows if row["image_complete"])
-    eos_count = sum(1 for row in sample_rows if row["eos"])
+    first_image_complete_count = sum(1 for row in sample_rows if row["first_image_complete"])
+    eos_count = sum(1 for row in sample_rows if row["sequence_eos"])
     manual_notes = run_dir / "manual_visual_notes.md"
     labeled_analysis = run_dir / "labeled_analysis" / "tables" / "hallucination_diagnostics.csv"
     return {
@@ -159,7 +209,8 @@ def run_row(run_dir: Path, sample_rows: Sequence[Mapping[str, Any]]) -> Dict[str
         "run_id": run_dir.name,
         "samples": len(sample_rows),
         "decoded_samples": decoded_count,
-        "image_complete_samples": complete_count,
+        "first_image_complete_samples": first_image_complete_count,
+        "image_complete_samples": first_image_complete_count,
         "eos_samples": eos_count,
         "tokens": sum(int(row["tokens"]) for row in sample_rows),
         "visual_tokens": sum(int(row["visual_tokens"]) for row in sample_rows),
@@ -191,11 +242,16 @@ def fmt(value: Any) -> str:
     return str(value)
 
 
-def write_markdown(path: Path, run_rows: Sequence[Mapping[str, Any]], sample_rows: Sequence[Mapping[str, Any]]) -> None:
+def write_markdown(
+    path: Path,
+    run_rows: Sequence[Mapping[str, Any]],
+    sample_rows: Sequence[Mapping[str, Any]],
+    root: Path,
+) -> None:
     lines = [
         "# Real UME Run Index",
         "",
-        "This report is generated only from local real run trace files under `outputs/emu3p5-image/*/ume_trace_runs/`.",
+        f"This report is generated only from local real run trace files under `{root}/*/ume_trace_runs/`.",
         "Synthetic smoke tests are intentionally excluded unless they are present in that real-output tree.",
         "",
         "## Aggregate",
@@ -217,7 +273,7 @@ def write_markdown(path: Path, run_rows: Sequence[Mapping[str, Any]], sample_row
                     str(run_count),
                     str(len(rows)),
                     str(sum(1 for row in rows if row["decoded"])),
-                    str(sum(1 for row in rows if row["image_complete"])),
+                    str(sum(1 for row in rows if row["first_image_complete"])),
                     str(sum(int(row["visual_tokens"]) for row in rows)),
                     fmt(mean(visual_means)),
                     fmt(mean(visual_p90s)),
@@ -227,7 +283,7 @@ def write_markdown(path: Path, run_rows: Sequence[Mapping[str, Any]], sample_row
         )
 
     lines.extend(["", "## Runs", ""])
-    lines.extend(["| task | run_id | samples | decoded | complete | eos | visual tokens | mean visual UME | mean visual p90 | notes | labeled |", "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |"])
+    lines.extend(["| task | run_id | samples | decoded | first image complete | sequence eos | visual tokens | mean visual UME | mean visual p90 | notes | labeled |", "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |"])
     for row in run_rows:
         lines.append(
             "| "
@@ -237,7 +293,7 @@ def write_markdown(path: Path, run_rows: Sequence[Mapping[str, Any]], sample_row
                     str(row["run_id"]),
                     str(row["samples"]),
                     str(row["decoded_samples"]),
-                    str(row["image_complete_samples"]),
+                    str(row["first_image_complete_samples"]),
                     str(row["eos_samples"]),
                     str(row["visual_tokens"]),
                     fmt(row["mean_sample_visual_mean_ume"]),
@@ -250,7 +306,7 @@ def write_markdown(path: Path, run_rows: Sequence[Mapping[str, Any]], sample_row
         )
 
     lines.extend(["", "## Samples", ""])
-    lines.extend(["| task | run_id | sample_id | decoded | complete | eos | visual tokens | visual mean UME | visual p90 | max UME | decoded size |", "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |"])
+    lines.extend(["| task | run_id | sample_id | decoded | first image | eos | visual tokens | visual mean UME | visual p90 | max UME | terminal state | boundary mean U_mod | decoded size |", "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- | ---: | --- |"])
     for row in sample_rows:
         size = ""
         if row["decoded_width"] != "":
@@ -263,12 +319,14 @@ def write_markdown(path: Path, run_rows: Sequence[Mapping[str, Any]], sample_row
                     str(row["run_id"]),
                     str(row["sample_id"]),
                     "yes" if row["decoded"] else "",
-                    "yes" if row["image_complete"] else "",
-                    "yes" if row["eos"] else "",
+                    "yes" if row["first_image_complete"] else "",
+                    "yes" if row["sequence_eos"] else "",
                     str(row["visual_tokens"]),
                     fmt(row["visual_mean_ume"]),
                     fmt(row["visual_p90_ume"]),
                     fmt(row["visual_max_ume"]),
+                    str(row["terminal_state"]),
+                    fmt(row["boundary_mean_u_mod"]),
                     size,
                 ]
             )
@@ -285,6 +343,8 @@ def main() -> None:
     sample_rows: List[Dict[str, Any]] = []
 
     for run_dir in find_run_dirs(root):
+        if args.run_id_contains and args.run_id_contains not in run_dir.name:
+            continue
         rows = [sample_row(run_dir, trace_path, root) for trace_path in sorted((run_dir / "entropy_traces").glob("*_entropy.jsonl"))]
         if not rows:
             continue
@@ -293,7 +353,7 @@ def main() -> None:
 
     write_csv(out_dir / "real_ume_run_index.csv", run_rows)
     write_csv(out_dir / "real_ume_sample_index.csv", sample_rows)
-    write_markdown(out_dir / "real_ume_run_index.md", run_rows, sample_rows)
+    write_markdown(out_dir / "real_ume_run_index.md", run_rows, sample_rows, root)
     print(f"[INFO] wrote {len(run_rows)} run rows and {len(sample_rows)} sample rows to {out_dir}")
 
 

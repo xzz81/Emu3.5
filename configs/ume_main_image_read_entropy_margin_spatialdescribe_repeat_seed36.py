@@ -1,0 +1,50 @@
+# Copyright 2025 BAAI. and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+
+from configs.ume_main_image_read_entropy_seed21 import *  # noqa: F401,F403
+
+
+seed = 24036
+max_new_tokens = 64
+sampling_params["max_new_tokens"] = max_new_tokens
+sampling_params["do_sample"] = True
+sampling_params["text_temperature"] = 1.0
+
+IMAGE_ROOT = Path("assets/ume_image_read_margin_single_object_seed34")
+MARGINS = [8, 24, 48, 88]
+
+BASE_CASES = [
+    ("ul_red_circle", "red circle", "upper-left"),
+    ("ur_red_circle", "red circle", "upper-right"),
+    ("ll_red_circle", "red circle", "lower-left"),
+    ("lr_red_circle", "red circle", "lower-right"),
+    ("ul_blue_square", "blue square", "upper-left"),
+    ("ur_blue_square", "blue square", "upper-right"),
+    ("ll_blue_square", "blue square", "lower-left"),
+    ("lr_blue_square", "blue square", "lower-right"),
+    ("ul_yellow_triangle", "yellow triangle", "upper-left"),
+    ("ur_yellow_triangle", "yellow triangle", "upper-right"),
+    ("ll_yellow_triangle", "yellow triangle", "lower-left"),
+    ("lr_yellow_triangle", "yellow triangle", "lower-right"),
+]
+
+repeats = 3
+
+prompts = {}
+for rep in range(repeats):
+    for margin in MARGINS:
+        for case_key, object_phrase, position_phrase in BASE_CASES:
+            margin_case_key = f"m{margin:03d}_{case_key}"
+            image_path = str(IMAGE_ROOT / f"{margin_case_key}.png")
+            prompt = (
+                "Describe this image carefully, including the object's color, shape, "
+                "and whether it is in the upper-left, upper-right, lower-left, or lower-right part of the image."
+            )
+            prompts[f"marginspatialrep{rep:02d}_{margin_case_key}__spatialdescribe"] = {
+                "prompt": prompt,
+                "reference_image": image_path,
+                "expected_object": object_phrase,
+                "expected_position": position_phrase,
+                "repeat": rep,
+                "margin_px": margin,
+            }

@@ -1,0 +1,13 @@
+sample_suffix,object,target_position,reference_image,distractor_object,distractor_position,ref_x0,ref_y0,ref_x1,ref_y1,distractor_x0,distractor_y0,distractor_x1,distractor_y1
+ul_red_circle,red circle,upper-left,assets/ume_image_read_near_same_shape_distractor_seed32/ul_red_circle.png,blue circle,lower-right,168,168,232,232,280,280,344,344
+ur_red_circle,red circle,upper-right,assets/ume_image_read_near_same_shape_distractor_seed32/ur_red_circle.png,blue circle,lower-left,280,168,344,232,168,280,232,344
+ll_red_circle,red circle,lower-left,assets/ume_image_read_near_same_shape_distractor_seed32/ll_red_circle.png,blue circle,upper-right,168,280,232,344,280,168,344,232
+lr_red_circle,red circle,lower-right,assets/ume_image_read_near_same_shape_distractor_seed32/lr_red_circle.png,blue circle,upper-left,280,280,344,344,168,168,232,232
+ul_blue_square,blue square,upper-left,assets/ume_image_read_near_same_shape_distractor_seed32/ul_blue_square.png,yellow square,lower-right,168,168,232,232,280,280,344,344
+ur_blue_square,blue square,upper-right,assets/ume_image_read_near_same_shape_distractor_seed32/ur_blue_square.png,yellow square,lower-left,280,168,344,232,168,280,232,344
+ll_blue_square,blue square,lower-left,assets/ume_image_read_near_same_shape_distractor_seed32/ll_blue_square.png,yellow square,upper-right,168,280,232,344,280,168,344,232
+lr_blue_square,blue square,lower-right,assets/ume_image_read_near_same_shape_distractor_seed32/lr_blue_square.png,yellow square,upper-left,280,280,344,344,168,168,232,232
+ul_yellow_triangle,yellow triangle,upper-left,assets/ume_image_read_near_same_shape_distractor_seed32/ul_yellow_triangle.png,red triangle,lower-right,168,168,232,232,280,280,344,344
+ur_yellow_triangle,yellow triangle,upper-right,assets/ume_image_read_near_same_shape_distractor_seed32/ur_yellow_triangle.png,red triangle,lower-left,280,168,344,232,168,280,232,344
+ll_yellow_triangle,yellow triangle,lower-left,assets/ume_image_read_near_same_shape_distractor_seed32/ll_yellow_triangle.png,red triangle,upper-right,168,280,232,344,280,168,344,232
+lr_yellow_triangle,yellow triangle,lower-right,assets/ume_image_read_near_same_shape_distractor_seed32/lr_yellow_triangle.png,red triangle,upper-left,280,280,344,344,168,168,232,232

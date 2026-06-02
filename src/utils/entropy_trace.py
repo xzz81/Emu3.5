@@ -344,6 +344,18 @@ def build_trace_records(
             for key, value in metadata.items():
                 if key not in record:
                     record[key] = value
+        if token_type == "visual" and trace_entry:
+            for key in (
+                "visual_topk_k",
+                "visual_topk_prob_mass",
+                "visual_topk_token_ids",
+                "visual_topk_code_ids",
+                "visual_topk_probs",
+                "visual_topk_logits",
+            ):
+                value = trace_entry.get(key)
+                if value is not None:
+                    record[key] = value
         records.append(record)
         update_segment_state(state, token_id, ids)
 

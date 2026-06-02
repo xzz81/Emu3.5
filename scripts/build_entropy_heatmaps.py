@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--repo-root", default=str(Path(__file__).resolve().parents[1]))
     parser.add_argument("--metric", default="ume", choices=["ume", "u_tok", "u_intra", "u_cfg"])
     parser.add_argument("--max-samples", type=int, default=None)
+    parser.add_argument("--run-id-contains", default=None)
     return parser.parse_args()
 
 
@@ -77,9 +78,16 @@ def resolve_path(path_text: str, repo_root: Path) -> Path:
     return path if path.is_absolute() else repo_root / path
 
 
-def decoded_image_lookup(sample_index: Path, repo_root: Path) -> Dict[tuple[str, str], Path]:
-    lookup: Dict[tuple[str, str], Path] = {}
+def decoded_image_lookup(
+    sample_index: Path,
+    repo_root: Path,
+    run_id_contains: str | None = None,
+) -> Dict[tuple[str, str, str], Path]:
+    lookup: Dict[tuple[str, str, str], Path] = {}
     for row in read_csv(sample_index):
+        run_id = str(row.get("run_id", ""))
+        if run_id_contains and run_id_contains not in run_id:
+            continue
         if not as_bool(row.get("decoded", "")):
             continue
         decoded_image = row.get("decoded_image", "")
@@ -88,7 +96,7 @@ def decoded_image_lookup(sample_index: Path, repo_root: Path) -> Dict[tuple[str,
         path = resolve_path(decoded_image, repo_root)
         if not path.exists():
             continue
-        key = (str(row.get("task", "")), str(row.get("sample_id", "")))
+        key = (str(row.get("task", "")), run_id, str(row.get("sample_id", "")))
         lookup.setdefault(key, path)
     return lookup
 
@@ -192,11 +200,18 @@ def quantile(values: Sequence[float], fraction: float) -> float:
     return ordered[max(0, min(len(ordered) - 1, idx))]
 
 
-def collect_token_rows(trace_dir: Path, metric: str) -> List[Dict[str, Any]]:
+def collect_token_rows(trace_dir: Path, metric: str, run_id_contains: str | None = None) -> List[Dict[str, Any]]:
     rows: List[Dict[str, Any]] = []
-    for path in sorted(trace_dir.glob("*_entropy.jsonl")):
+    paths = sorted(trace_dir.glob("*_entropy.jsonl"))
+    if not paths:
+        paths = sorted(trace_dir.rglob("*_entropy.jsonl"))
+    for path in paths:
+        run_id = path.parent.parent.name if path.parent.name == "entropy_traces" else ""
+        if run_id_contains and run_id_contains not in run_id:
+            continue
         for row in iter_visual_positions(read_jsonl(path), metric):
             row["trace_file"] = str(path)
+            row["run_id"] = run_id
             rows.append(row)
     return rows
 
@@ -371,25 +386,25 @@ def build_report(rows: Sequence[Mapping[str, Any]]) -> str:
 def render_heatmaps(
     *,
     token_rows: Sequence[Dict[str, Any]],
-    image_lookup: Mapping[tuple[str, str], Path],
+    image_lookup: Mapping[tuple[str, str, str], Path],
     out_dir: Path,
     metric: str,
     max_samples: int | None,
 ) -> List[Dict[str, Any]]:
-    by_sample: Dict[tuple[str, str], List[Dict[str, Any]]] = {}
+    by_sample: Dict[tuple[str, str, str], List[Dict[str, Any]]] = {}
     for row in token_rows:
         if int(row.get("image_index", -1)) != 0:
             continue
         if row.get("grid_h") is None or row.get("grid_w") is None:
             continue
-        key = (str(row["task"]), str(row["sample_id"]))
+        key = (str(row["task"]), str(row.get("run_id", "")), str(row["sample_id"]))
         by_sample.setdefault(key, []).append(row)
 
     summary_rows: List[Dict[str, Any]] = []
-    for idx, ((task, sample_id), rows) in enumerate(sorted(by_sample.items())):
+    for idx, ((task, run_id, sample_id), rows) in enumerate(sorted(by_sample.items())):
         if max_samples is not None and idx >= max_samples:
             break
-        image_path = image_lookup.get((task, sample_id))
+        image_path = image_lookup.get((task, run_id, sample_id))
         if image_path is None:
             continue
         grid_h = int(rows[0]["grid_h"])
@@ -401,9 +416,9 @@ def render_heatmaps(
         ]
         if len(complete_rows) < grid_h * grid_w:
             continue
-        out_path = out_dir / f"{metric}__{task}__{sample_id}.png"
+        out_path = out_dir / f"{metric}__{task}__{run_id}__{sample_id}.png"
         info = render_sample_heatmap(image_path=image_path, rows=complete_rows, out_path=out_path, metric=metric)
-        summary_rows.append({"task": task, "sample_id": sample_id, **info})
+        summary_rows.append({"task": task, "run_id": run_id, "sample_id": sample_id, **info})
     return summary_rows
 
 
@@ -413,12 +428,12 @@ def main() -> None:
     trace_dir = Path(args.trace_dir)
     sample_index = Path(args.sample_index)
     out_dir = Path(args.out_dir)
-    token_rows = collect_token_rows(trace_dir, args.metric)
+    token_rows = collect_token_rows(trace_dir, args.metric, args.run_id_contains)
     add_position_residuals(token_rows)
     write_csv(out_dir / f"{args.metric}_visual_token_entropy_residuals.csv", token_rows)
     summary_rows = render_heatmaps(
         token_rows=token_rows,
-        image_lookup=decoded_image_lookup(sample_index, repo_root),
+        image_lookup=decoded_image_lookup(sample_index, repo_root, args.run_id_contains),
         out_dir=out_dir,
         metric=args.metric,
         max_samples=args.max_samples,

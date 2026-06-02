@@ -1,0 +1,9 @@
+sample_suffix,object,target_position,reference_image,ref_x0,ref_y0,ref_x1,ref_y1
+ul_red_button,red button,upper-left,assets/ume_reference_layout_seed19/ul_red_button.png,64,60,176,172
+ur_red_button,red button,upper-right,assets/ume_reference_layout_seed19/ur_red_button.png,336,60,448,172
+ll_purple_cube,purple cube,lower-left,assets/ume_reference_layout_seed19/ll_purple_cube.png,64,336,176,448
+lr_purple_cube,purple cube,lower-right,assets/ume_reference_layout_seed19/lr_purple_cube.png,336,336,448,448
+ul_yellow_token,yellow disk,upper-left,assets/ume_reference_layout_seed19/ul_yellow_token.png,64,60,176,172
+ur_yellow_token,yellow disk,upper-right,assets/ume_reference_layout_seed19/ur_yellow_token.png,336,60,448,172
+ll_blue_cube,blue cube,lower-left,assets/ume_reference_layout_seed19/ll_blue_cube.png,64,336,176,448
+lr_blue_cube,blue cube,lower-right,assets/ume_reference_layout_seed19/lr_blue_cube.png,336,336,448,448

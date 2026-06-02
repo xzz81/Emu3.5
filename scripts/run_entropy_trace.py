@@ -19,6 +19,14 @@ from PIL import Image
 import torch
 from tqdm import tqdm
 
+try:
+    _TORCHVISION_SCHEMA_LIB = torch.library.Library("torchvision", "DEF")
+    _TORCHVISION_SCHEMA_LIB.define(
+        "nms(Tensor dets, Tensor scores, float iou_threshold) -> Tensor"
+    )
+except Exception:
+    pass
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))

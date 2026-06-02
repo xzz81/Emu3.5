@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from transformers import GenerationConfig
 
-from transformers.generation import LogitsProcessorList
+from transformers.generation import LogitsProcessorList, StoppingCriteria, StoppingCriteriaList
 from .logits_processor import (
     UnbatchedClassifierFreeGuidanceLogitsForVisualTokenWithDifferentialTopKProcessor
 )
@@ -23,6 +23,44 @@ try:
     _HAS_STREAMER = True
 except Exception:
     _HAS_STREAMER = False
+
+
+class StopAfterCompletedImagesCriteria(StoppingCriteria):
+    """Stop after N generated image-end tokens, optionally allowing extra tokens."""
+
+    def __init__(self, prompt_len: int, eoi_token_id: int, completed_images: int = 1, extra_tokens: int = 0):
+        self.prompt_len = int(prompt_len)
+        self.eoi_token_id = int(eoi_token_id)
+        self.completed_images = int(completed_images)
+        self.extra_tokens = int(extra_tokens)
+
+    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+        generated = input_ids[0, self.prompt_len :]
+        eoi_positions = (generated == self.eoi_token_id).nonzero().flatten()
+        if int(eoi_positions.numel()) < self.completed_images:
+            return False
+        target_eoi_pos = int(eoi_positions[self.completed_images - 1].item())
+        generated_after_eoi = int(generated.numel()) - target_eoi_pos - 1
+        return generated_after_eoi >= self.extra_tokens
+
+
+def _build_stopping_criteria(cfg, input_ids_len: int) -> Optional[StoppingCriteriaList]:
+    completed_images = getattr(cfg, "stop_after_completed_images", None)
+    if completed_images is None:
+        return None
+    if int(completed_images) <= 0:
+        return None
+    criteria = StoppingCriteriaList(
+        [
+            StopAfterCompletedImagesCriteria(
+                prompt_len=input_ids_len,
+                eoi_token_id=cfg.special_token_ids["EOI"],
+                completed_images=int(completed_images),
+                extra_tokens=int(getattr(cfg, "stop_after_eoi_extra_tokens", 0)),
+            )
+        ]
+    )
+    return criteria
 
 
 @torch.no_grad()
@@ -230,6 +268,7 @@ def non_streaming_generate(
         input_ids,
         generation_config,
         logits_processor=logits_processor,
+        stopping_criteria=_build_stopping_criteria(cfg, input_ids_len),
     )
     gen_token_ids = token_ids[:, input_ids_len:]
     return gen_token_ids[0].detach().cpu().numpy()
@@ -268,6 +307,7 @@ def generate_with_entropy_trace(
         input_ids,
         generation_config,
         logits_processor=logits_processor,
+        stopping_criteria=_build_stopping_criteria(cfg, input_ids_len),
         return_dict_in_generate=True,
         output_scores=True,
     )
@@ -280,7 +320,11 @@ def generate_with_entropy_trace(
         tokenizer=tokenizer,
         special_token_ids=cfg.special_token_ids,
         cfg_trace=cfg_trace,
-        metadata={"task": getattr(cfg, "task_type", "unknown")},
+        metadata={
+            "task": getattr(cfg, "task_type", "unknown"),
+            "stop_after_completed_images": getattr(cfg, "stop_after_completed_images", None),
+            "stop_after_eoi_extra_tokens": getattr(cfg, "stop_after_eoi_extra_tokens", None),
+        },
     )
     return gen_token_ids.tolist(), records
 
@@ -313,6 +357,7 @@ def build_logits_processor(
         image_temperature=cfg.sampling_params["image_temperature"],
         force_same_image_size=force_same_image_size,
         trace_collector=trace_collector,
+        trace_topk_visual=getattr(cfg, "trace_topk_visual", 0),
     )
     return logits_processor
 
