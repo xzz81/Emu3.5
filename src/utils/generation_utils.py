@@ -45,22 +45,25 @@ class StopAfterCompletedImagesCriteria(StoppingCriteria):
 
 
 def _build_stopping_criteria(cfg, input_ids_len: int) -> Optional[StoppingCriteriaList]:
+    criteria = StoppingCriteriaList()
     completed_images = getattr(cfg, "stop_after_completed_images", None)
-    if completed_images is None:
-        return None
-    if int(completed_images) <= 0:
-        return None
-    criteria = StoppingCriteriaList(
-        [
+    if completed_images is not None and int(completed_images) > 0:
+        criteria.append(
             StopAfterCompletedImagesCriteria(
                 prompt_len=input_ids_len,
                 eoi_token_id=cfg.special_token_ids["EOI"],
                 completed_images=int(completed_images),
                 extra_tokens=int(getattr(cfg, "stop_after_eoi_extra_tokens", 0)),
             )
-        ]
-    )
-    return criteria
+        )
+    extra_criteria = getattr(cfg, "extra_stopping_criteria", None)
+    if extra_criteria is not None:
+        if isinstance(extra_criteria, (list, tuple, StoppingCriteriaList)):
+            for item in extra_criteria:
+                criteria.append(item)
+        else:
+            criteria.append(extra_criteria)
+    return criteria if criteria else None
 
 
 @torch.no_grad()

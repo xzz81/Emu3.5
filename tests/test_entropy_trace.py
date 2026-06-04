@@ -22,6 +22,7 @@ from src.utils.entropy_trace import (
     write_jsonl,
     write_visual_artifacts,
 )
+from src.utils.activation_probe import ActivationAccumulator, token_group_labels, token_type_for_id
 
 
 SPECIAL_IDS = {
@@ -65,6 +66,23 @@ class EntropyTraceTest(unittest.TestCase):
         self.assertEqual(records[5]["token_type"], "visual")
         self.assertEqual(records[6]["token_type"], "structure")
         self.assertEqual(records[-1]["segment"], "text")
+
+    def test_activation_probe_grouping_and_contrast(self):
+        input_ids = torch.tensor([[0, 11, 20, 8]])
+        labels = token_group_labels(input_ids, "generation", SPECIAL_IDS, visual_token_start=20)
+        self.assertEqual(token_type_for_id(20, SPECIAL_IDS, visual_token_start=20), "visual")
+        self.assertIn("task=generation", labels[0])
+        self.assertIn("token_type=visual", labels[2])
+
+        acc = ActivationAccumulator()
+        gen = torch.tensor([[[0.0, 3.0], [0.0, 4.0]]])
+        read = torch.tensor([[[2.0, 0.0], [3.0, 0.0]]])
+        acc.update(0, [("task=generation",), ("task=generation",)], gen)
+        acc.update(0, [("task=understanding",), ("task=understanding",)], read)
+        rows = acc.top_contrast_rows("task=generation", "task=understanding", top_k=1)
+        self.assertEqual(rows[0]["layer"], 0)
+        self.assertEqual(rows[0]["neuron"], 1)
+        self.assertGreater(rows[0]["delta_mean_abs"], 0.0)
 
     def test_cfg_trace_contributes_to_ume(self):
         generated = [11]
