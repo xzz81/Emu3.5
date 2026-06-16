@@ -37,7 +37,18 @@ logs/
 video_outputs/
 video_case/
 checkpoints/
+data/*
+!data/README.md
+model/*
+!model/README.md
 weights/
+models/
+external/benchmarks/*
+!external/benchmarks/README.md
+cache/
+.cache/
+hf_cache
+modelscope_cache
 *.log
 *.mp4
 

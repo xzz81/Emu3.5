@@ -1,0 +1,22 @@
+# Register benchmark datasets and third-party benchmark or baseline repositories here.
+# Keep data access paths under data/benchmarks/ and external code under external/benchmarks/.
+
+benchmarks: {}
+
+# Example:
+# benchmarks:
+#   mllmu_bench:
+#     type: benchmark_repo
+#     repo: https://github.com/xxx/MLLMU-Bench
+#     commit: "<pinned_commit_or_tag>"
+#     code_path: external/benchmarks/MLLMU-Bench
+#     data_path: data/benchmarks/mllmu_bench
+#     has_training_code: true
+#     has_eval_code: true
+#     note: "Used for VLM/MLLM unlearning evaluation."
+#   vlm_unlearn_dataset:
+#     type: dataset_only
+#     source: "<download_url_or_server_path>"
+#     data_path: data/benchmarks/vlm_unlearn_dataset
+#     has_training_code: false
+#     has_eval_code: false
