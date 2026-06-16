@@ -45,6 +45,8 @@ weights/
 models/
 external/benchmarks/*
 !external/benchmarks/README.md
+third_party/*
+!third_party/README.md
 cache/
 .cache/
 hf_cache
