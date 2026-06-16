@@ -30,7 +30,7 @@ PROMPT = (
     "or 'small credit text at the top'. Focus on people, objects, colors, lighting, and composition."
 )
 
-GT_DIR = Path("/workspace/home/AAAI 2027/research_logs/modal_aphasia_posters/gt_posters_wikipedia_20260531")
+GT_DIR = Path("data/modal_aphasia_posters/gt_posters_wikipedia_20260531")
 MANIFEST = GT_DIR / "manifest.json"
 
 

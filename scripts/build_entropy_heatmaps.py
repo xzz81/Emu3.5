@@ -25,9 +25,9 @@ EOL_TEXT = "<|extra_200|>"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--trace-dir", default="../research_logs/region_labeled_entropy_traces")
-    parser.add_argument("--sample-index", default="../research_logs/real_ume_sample_index.csv")
-    parser.add_argument("--out-dir", default="../research_logs/entropy_heatmaps")
+    parser.add_argument("--trace-dir", default="outputs/research_logs/region_labeled_entropy_traces")
+    parser.add_argument("--sample-index", default="data/real_ume/real_ume_sample_index.csv")
+    parser.add_argument("--out-dir", default="outputs/research_logs/entropy_heatmaps")
     parser.add_argument("--repo-root", default=str(Path(__file__).resolve().parents[1]))
     parser.add_argument("--metric", default="ume", choices=["ume", "u_tok", "u_intra", "u_cfg"])
     parser.add_argument("--max-samples", type=int, default=None)

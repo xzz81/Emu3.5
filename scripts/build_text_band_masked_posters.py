@@ -29,11 +29,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--manifest",
-        default="../research_logs/modal_aphasia_posters/gt_posters_wikipedia_20260531/manifest.json",
+        default="data/modal_aphasia_posters/gt_posters_wikipedia_20260531/manifest.json",
     )
     parser.add_argument(
         "--out-dir",
-        default="../research_logs/modal_aphasia_posters/gt_posters_text_band_masked_seed75",
+        default="data/modal_aphasia_posters/gt_posters_text_band_masked_seed75",
     )
     return parser.parse_args()
 

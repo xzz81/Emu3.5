@@ -24,7 +24,7 @@ target_width = 32
 max_new_tokens = 1400
 sampling_params["max_new_tokens"] = max_new_tokens
 
-POSTER_DATA = Path("/workspace/home/AAAI 2027/modal-aphasia/misc/real_world_data/posters-1.json")
+POSTER_DATA = Path("data/modal_aphasia/posters-1.json")
 
 
 def _slug(text: str) -> str:

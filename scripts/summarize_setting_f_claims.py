@@ -14,12 +14,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--log-root",
-        default="../research_logs/modal_aphasia_posters",
+        default="outputs/research_logs/modal_aphasia_posters",
         help="Directory containing Setting F research logs.",
     )
     parser.add_argument(
         "--out-dir",
-        default="../research_logs/modal_aphasia_posters/setting_f_claim_audit_20260601",
+        default="outputs/research_logs/modal_aphasia_posters/setting_f_claim_audit_20260601",
         help="Directory for consolidated claim-audit outputs.",
     )
     return parser.parse_args()

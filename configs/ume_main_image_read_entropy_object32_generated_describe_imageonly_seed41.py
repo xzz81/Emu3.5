@@ -12,7 +12,7 @@ sampling_params["max_new_tokens"] = max_new_tokens
 sampling_params["do_sample"] = True
 sampling_params["text_temperature"] = 1.0
 
-QA_SPEC = Path("../research_logs/main_model_20260530/object32_manual_gold_20sample_analysis/manual_object_gold_20sample_qa_spec.json")
+QA_SPEC = Path("data/main_model_20260530/object32_manual_gold_20sample_analysis/manual_object_gold_20sample_qa_spec.json")
 
 GEN_RUN_BY_PREFIX = {
     "t2i_object32_": "main_t2i_first_image_stop_topk64_object32_seed4_20260530",

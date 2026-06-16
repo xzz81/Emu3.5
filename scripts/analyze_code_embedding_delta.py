@@ -35,7 +35,7 @@ def parse_args():
     parser.add_argument("--root", default="outputs/emu3p5-main")
     parser.add_argument(
         "--vq-ckpt",
-        default="/workspace/home/AAAI 2027/models/BAAI/Emu3.5-VisionTokenizer/model.safetensors",
+        default="model/Emu3.5-VisionTokenizer/model.safetensors",
     )
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--run-id-contains", default="first_image_stop")

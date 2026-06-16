@@ -14,9 +14,9 @@ from datasets import load_from_disk
 from PIL import Image
 
 
-BENCH_DIR = Path("/workspace/home/AAAI 2027/Emu3.5/outputs/bench/modal_memory_lora_entropy_full")
-TASK_DIR = Path("/workspace/home/AAAI 2027/Emu3.5/outputs/bench/task_entropy_compare_full")
-DATASET_DIR = Path("/workspace/home/AAAI 2027/data/synthetic_images_384")
+BENCH_DIR = Path("outputs/bench/modal_memory_lora_entropy_full")
+TASK_DIR = Path("outputs/bench/task_entropy_compare_full")
+DATASET_DIR = Path("data/synthetic_images_384")
 OUT_DIR = BENCH_DIR / "entropy_showcase"
 GRID_SIZE = 24
 IMAGE_SIZE = 384

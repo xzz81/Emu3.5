@@ -81,8 +81,8 @@ BUCKET_RULES = [
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--log-dir", default="../research_logs")
-    parser.add_argument("--out-dir", default="../research_logs/phase1_coverage")
+    parser.add_argument("--log-dir", default="outputs/research_logs")
+    parser.add_argument("--out-dir", default="outputs/research_logs/phase1_coverage")
     parser.add_argument("--hf-cache", default=str(Path.home() / ".cache" / "huggingface" / "hub"))
     return parser.parse_args()
 

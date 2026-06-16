@@ -1,21 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "/workspace/home/AAAI 2027/Emu3.5"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "${PROJECT_ROOT}"
 
 RUN_ID="entropy_emu35image_100diverse_20260529"
 OUT="outputs/emu3p5-image/t2i/ume_trace_runs/${RUN_ID}"
 mkdir -p "${OUT}/logs"
 
 COMMON_ENV=(
-  HOME=/workspace/home
-  HF_HOME=/workspace/home/.cache/huggingface
+  HOME="${HOME}"
+  HF_HOME="${PROJECT_ROOT}/.cache/huggingface"
   HF_HUB_OFFLINE=1
-  PYTHONPATH=.
+  PYTHONPATH="${PROJECT_ROOT}"
   PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 )
 
-PY="/workspace/home/conda_envs/emu35-transformers/bin/python"
+PY="${PY:-${PROJECT_ROOT}/.venv-transformers/bin/python}"
+if [[ ! -x "${PY}" ]]; then
+  PY="python"
+fi
 CFG="configs/ume_real_t2i_100diverse.py"
 
 (

@@ -31,7 +31,7 @@ PROMPT = (
     "Describe only visible people, objects, colors, lighting, and composition."
 )
 
-GT_DIR = Path("/workspace/home/AAAI 2027/research_logs/modal_aphasia_posters/gt_posters_text_band_masked_seed75")
+GT_DIR = Path("data/modal_aphasia_posters/gt_posters_text_band_masked_seed75")
 MANIFEST = GT_DIR / "manifest.json"
 
 

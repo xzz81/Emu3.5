@@ -21,7 +21,7 @@ sampling_params["max_new_tokens"] = max_new_tokens
 sampling_params["do_sample"] = True
 sampling_params["text_temperature"] = 0.8
 
-POSTER_DATA = Path("/workspace/home/AAAI 2027/modal-aphasia/misc/real_world_data/posters-1.json")
+POSTER_DATA = Path("data/modal_aphasia/posters-1.json")
 GENERATED_IMAGE_DIR = Path(
     "outputs/emu3p5-main/modal_aphasia_poster_image/ume_trace_runs/"
     "main_modal_aphasia_posters_image_seed40_20260531/decoded"

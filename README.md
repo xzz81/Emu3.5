@@ -91,8 +91,8 @@ Edit `configs/config.py` to set:
   vq_path = "BAAI/Emu3.5-VisionTokenizer"  # remote, auto-download
   model_path = "BAAI/Emu3.5"               # remote, auto-download
   # or
-  vq_path = "/path/to/local/Emu3.5-VisionTokenizer"  # local path
-  model_path = "/path/to/local/Emu3.5"               # local path
+  vq_path = "model/Emu3.5-VisionTokenizer"  # local path
+  model_path = "model/Emu3.5"               # local path
   ```
 - Task template: `task_type in {t2i, x2i, howto, story, explore, vla}`
 - Input image: `use_image` (True to provide reference images, controls <|IMAGE|> token); set `reference_image` in each prompt to specify the image path. For x2i task, we recommand using `reference_image` as a list containing single/multiple image paths to be compatible with multi-image input.

@@ -21,8 +21,14 @@ from transformers import GenerationConfig
 from transformers.generation import LogitsProcessor, LogitsProcessorList, StoppingCriteria, StoppingCriteriaList
 
 try:
-    _TORCHVISION_SCHEMA_LIB = torch.library.Library("torchvision", "DEF")
-    _TORCHVISION_SCHEMA_LIB.define("nms(Tensor dets, Tensor scores, float iou_threshold) -> Tensor")
+    import torchvision  # noqa: F401
+except RuntimeError as exc:
+    if "operator torchvision::nms does not exist" in str(exc):
+        try:
+            _TORCHVISION_SCHEMA_LIB = torch.library.Library("torchvision", "DEF")
+            _TORCHVISION_SCHEMA_LIB.define("nms(Tensor dets, Tensor scores, float iou_threshold) -> Tensor")
+        except Exception:
+            pass
 except Exception:
     pass
 

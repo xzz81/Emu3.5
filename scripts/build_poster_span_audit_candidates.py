@@ -59,7 +59,7 @@ TRIVIAL_SPANS = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--log-root", default="../research_logs/modal_aphasia_posters")
+    parser.add_argument("--log-root", default="outputs/research_logs/modal_aphasia_posters")
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--top-per-sample", type=int, default=8)
     parser.add_argument(

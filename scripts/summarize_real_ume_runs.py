@@ -28,7 +28,7 @@ MARKERS = (
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", default="outputs/emu3p5-image")
-    parser.add_argument("--out-dir", default="../research_logs")
+    parser.add_argument("--out-dir", default="outputs/research_logs")
     parser.add_argument("--run-id-contains", default=None)
     return parser.parse_args()
 

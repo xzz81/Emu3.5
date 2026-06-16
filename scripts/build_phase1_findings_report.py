@@ -14,8 +14,8 @@ from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--log-dir", default="../research_logs")
-    parser.add_argument("--out", default="../research_logs/phase1_findings_report.md")
+    parser.add_argument("--log-dir", default="outputs/research_logs")
+    parser.add_argument("--out", default="outputs/research_logs/phase1_findings_report.md")
     return parser.parse_args()
 
 

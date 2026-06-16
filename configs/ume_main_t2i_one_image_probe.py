@@ -6,8 +6,8 @@ from src.utils.logging_utils import setup_logger
 
 cfg_name = Path(__file__).stem
 
-model_path = "/workspace/home/AAAI 2027/models/BAAI/Emu3.5"
-vq_path = "/workspace/home/AAAI 2027/models/BAAI/Emu3.5-VisionTokenizer"
+model_path = "model/Emu3.5"
+vq_path = "model/Emu3.5-VisionTokenizer"
 tokenizer_path = "./src/tokenizer_emu3_ibq"
 vq_type = "ibq"
 

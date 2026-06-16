@@ -25,8 +25,8 @@ METRICS: Dict[str, MetricFn] = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--trace-dir", default="../research_logs/region_labeled_entropy_traces")
-    parser.add_argument("--out-dir", default="../research_logs/error_type_strata")
+    parser.add_argument("--trace-dir", default="outputs/research_logs/region_labeled_entropy_traces")
+    parser.add_argument("--out-dir", default="outputs/research_logs/error_type_strata")
     parser.add_argument("--min-positive-tokens", type=int, default=50)
     return parser.parse_args()
 

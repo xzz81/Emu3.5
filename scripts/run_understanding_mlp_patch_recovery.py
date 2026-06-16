@@ -21,8 +21,14 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 try:
-    _TORCHVISION_SCHEMA_LIB = torch.library.Library("torchvision", "DEF")
-    _TORCHVISION_SCHEMA_LIB.define("nms(Tensor dets, Tensor scores, float iou_threshold) -> Tensor")
+    import torchvision  # noqa: F401
+except RuntimeError as exc:
+    if "operator torchvision::nms does not exist" in str(exc):
+        try:
+            _TORCHVISION_SCHEMA_LIB = torch.library.Library("torchvision", "DEF")
+            _TORCHVISION_SCHEMA_LIB.define("nms(Tensor dets, Tensor scores, float iou_threshold) -> Tensor")
+        except Exception:
+            pass
 except Exception:
     pass
 
@@ -39,7 +45,7 @@ from src.utils.model_utils import build_emu3p5  # noqa: E402
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cfg", default="configs/ume_main_image_read_hue_control_gt_greedy_seed71.py")
-    parser.add_argument("--manifest", default="/workspace/home/AAAI 2027/research_logs/hue_control_gt_images_seed70/manifest.json")
+    parser.add_argument("--manifest", default="data/hue_control_gt_images_seed70/manifest.json")
     parser.add_argument("--candidate", action="append", default=[], help="Layer/neuron as LAYER:NEURON.")
     parser.add_argument("--candidate-csv", default=None, help="CSV with layer and neuron columns.")
     parser.add_argument("--top-n", type=int, default=0)

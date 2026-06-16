@@ -20,9 +20,9 @@ COMPONENTS = ("u_tok", "u_intra", "u_cfg", "u_mod")
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--trace-dir", required=True, help="Region-labeled *_entropy.jsonl traces.")
-    parser.add_argument("--sample-index", default="../research_logs/real_ume_sample_index.csv")
-    parser.add_argument("--labels", default="../research_logs/manual_sample_judgments.jsonl")
-    parser.add_argument("--out-dir", default="../research_logs/ume_weight_sweep")
+    parser.add_argument("--sample-index", default="data/real_ume/real_ume_sample_index.csv")
+    parser.add_argument("--labels", default="data/real_ume/manual_sample_judgments.jsonl")
+    parser.add_argument("--out-dir", default="outputs/research_logs/ume_weight_sweep")
     parser.add_argument("--step", type=float, default=0.25, help="Weight-grid step size; must evenly divide 1.0.")
     return parser.parse_args()
 

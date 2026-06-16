@@ -21,7 +21,7 @@ sampling_params["max_new_tokens"] = max_new_tokens
 sampling_params["do_sample"] = False
 sampling_params["text_temperature"] = 0.8
 
-GT_DIR = Path("/workspace/home/AAAI 2027/research_logs/modal_aphasia_posters/gt_posters_wikipedia_20260531")
+GT_DIR = Path("data/modal_aphasia_posters/gt_posters_wikipedia_20260531")
 MANIFEST = GT_DIR / "manifest.json"
 
 

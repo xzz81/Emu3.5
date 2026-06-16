@@ -51,8 +51,8 @@ MODEL_CACHE_PATTERNS = [
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=str(Path(__file__).resolve().parents[1]))
-    parser.add_argument("--log-dir", default="../research_logs")
-    parser.add_argument("--out-dir", default="../research_logs/reproducibility")
+    parser.add_argument("--log-dir", default="outputs/research_logs")
+    parser.add_argument("--out-dir", default="outputs/research_logs/reproducibility")
     parser.add_argument("--hf-cache", default=str(Path.home() / ".cache" / "huggingface" / "hub"))
     return parser.parse_args()
 

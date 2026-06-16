@@ -22,7 +22,7 @@ sampling_params["do_sample"] = True
 sampling_params["text_temperature"] = 0.8
 sampling_params["text_top_p"] = 0.9
 
-GT_DIR = Path("/workspace/home/AAAI 2027/research_logs/hue_control_gt_images_seed70")
+GT_DIR = Path("data/hue_control_gt_images_seed70")
 MANIFEST = GT_DIR / "manifest.json"
 
 

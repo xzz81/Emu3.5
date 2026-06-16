@@ -16,8 +16,14 @@ from PIL import Image
 import torch
 
 try:
-    _TORCHVISION_SCHEMA_LIB = torch.library.Library("torchvision", "DEF")
-    _TORCHVISION_SCHEMA_LIB.define("nms(Tensor dets, Tensor scores, float iou_threshold) -> Tensor")
+    import torchvision  # noqa: F401
+except RuntimeError as exc:
+    if "operator torchvision::nms does not exist" in str(exc):
+        try:
+            _TORCHVISION_SCHEMA_LIB = torch.library.Library("torchvision", "DEF")
+            _TORCHVISION_SCHEMA_LIB.define("nms(Tensor dets, Tensor scores, float iou_threshold) -> Tensor")
+        except Exception:
+            pass
 except Exception:
     pass
 
@@ -25,7 +31,7 @@ REPO_ROOT = Path(__file__).resolve().parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-MODAL_APHASIA_ROOT = Path("/workspace/home/AAAI 2027/modal-aphasia")
+MODAL_APHASIA_ROOT = Path("third_party/modal-aphasia")
 if MODAL_APHASIA_ROOT.exists() and str(MODAL_APHASIA_ROOT) not in sys.path:
     sys.path.insert(0, str(MODAL_APHASIA_ROOT))
 

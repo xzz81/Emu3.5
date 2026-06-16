@@ -23,9 +23,9 @@ CATEGORIES = [
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sample-index", default="../research_logs/real_ume_sample_index.csv")
-    parser.add_argument("--catalog-dir", default="../research_logs/token_extremes")
-    parser.add_argument("--out-dir", default="../research_logs/token_case_sheets")
+    parser.add_argument("--sample-index", default="data/real_ume/real_ume_sample_index.csv")
+    parser.add_argument("--catalog-dir", default="outputs/research_logs/token_extremes")
+    parser.add_argument("--out-dir", default="outputs/research_logs/token_case_sheets")
     parser.add_argument("--repo-root", default=str(Path(__file__).resolve().parents[1]))
     parser.add_argument("--samples-per-category", type=int, default=6)
     parser.add_argument("--tokens-per-sample", type=int, default=24)

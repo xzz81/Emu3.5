@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "/workspace/home/AAAI 2027/Emu3.5"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "${PROJECT_ROOT}"
 
 RUN_ID="entropy_emu35image_100diverse_20260529"
 RUN_DIR="outputs/emu3p5-image/t2i/ume_trace_runs/${RUN_ID}"
 LOG_DIR="${RUN_DIR}/logs"
 POST_LOG="${LOG_DIR}/postprocess.log"
+PY="${PY:-${PROJECT_ROOT}/.venv-transformers/bin/python}"
+if [[ ! -x "${PY}" ]]; then
+  PY="python"
+fi
 
 mkdir -p "${LOG_DIR}"
 
@@ -41,23 +47,23 @@ mkdir -p "${LOG_DIR}"
     exit 1
   fi
 
-  HOME=/workspace/home \
-  HF_HOME=/workspace/home/.cache/huggingface \
+  HOME="${HOME}" \
+  HF_HOME="${PROJECT_ROOT}/.cache/huggingface" \
   HF_HUB_OFFLINE=1 \
-  PYTHONPATH=. \
+  PYTHONPATH="${PROJECT_ROOT}" \
   PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
   CUDA_VISIBLE_DEVICES=0,1,2,3 \
-  /workspace/home/conda_envs/emu35-transformers/bin/python \
+  "${PY}" \
     scripts/analyze_entropy_attention_relation.py \
       --run-dir "${RUN_DIR}" \
-      --model-path /workspace/data/models/Emu3.5/Emu3.5-Image \
-      --vq-path /workspace/data/models/Emu3.5/Emu3.5-VisionTokenizer \
+      --model-path model/Emu3.5-Image \
+      --vq-path model/Emu3.5-VisionTokenizer \
       --model-device auto \
       --vq-device cuda:0 \
       --image-area 262144 \
       --describe-max-new-tokens 64
 
-  /workspace/home/conda_envs/emu35-transformers/bin/python \
+  "${PY}" \
     scripts/build_entropy_attention_deliverables.py \
       --run-dir "${RUN_DIR}" \
       --entropy-field u_tok_full \

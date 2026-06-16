@@ -12,8 +12,8 @@ from typing import Any
 import numpy as np
 
 
-BENCH_DIR = Path("/workspace/home/AAAI 2027/Emu3.5/outputs/bench/modal_memory_lora_entropy_full")
-TASK_DIR = Path("/workspace/home/AAAI 2027/Emu3.5/outputs/bench/task_entropy_compare_full")
+BENCH_DIR = Path("outputs/bench/modal_memory_lora_entropy_full")
+TASK_DIR = Path("outputs/bench/task_entropy_compare_full")
 OUT_DIR = BENCH_DIR / "entropy_showcase"
 
 

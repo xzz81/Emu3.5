@@ -32,7 +32,7 @@ PAIR_SPECS = [
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--out-dir", default="/workspace/home/AAAI 2027/research_logs/hue_control_gt_images_seed70")
+    parser.add_argument("--out-dir", default="data/hue_control_gt_images_seed70")
     parser.add_argument("--size", type=int, default=512)
     parser.add_argument("--scale", type=int, default=4)
     return parser.parse_args()

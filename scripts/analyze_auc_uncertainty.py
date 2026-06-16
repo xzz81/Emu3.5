@@ -29,9 +29,9 @@ ScoreFn = Callable[[Mapping[str, Any]], float]
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--trace-dir", required=True)
-    parser.add_argument("--sample-index", default="../research_logs/real_ume_sample_index.csv")
-    parser.add_argument("--labels", default="../research_logs/manual_sample_judgments.jsonl")
-    parser.add_argument("--out-dir", default="../research_logs/auc_uncertainty")
+    parser.add_argument("--sample-index", default="data/real_ume/real_ume_sample_index.csv")
+    parser.add_argument("--labels", default="data/real_ume/manual_sample_judgments.jsonl")
+    parser.add_argument("--out-dir", default="outputs/research_logs/auc_uncertainty")
     parser.add_argument("--bootstrap-iters", type=int, default=2000)
     parser.add_argument("--permutation-iters", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=20260524)

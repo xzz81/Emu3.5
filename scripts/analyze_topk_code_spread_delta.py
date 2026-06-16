@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument("--out-dir-name", default=None)
     parser.add_argument(
         "--vq-ckpt",
-        default="/workspace/home/AAAI 2027/models/BAAI/Emu3.5-VisionTokenizer/model.safetensors",
+        default="model/Emu3.5-VisionTokenizer/model.safetensors",
     )
     parser.add_argument("--device", default="auto")
     return parser.parse_args()

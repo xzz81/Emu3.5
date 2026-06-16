@@ -12,8 +12,14 @@ from pathlib import Path
 import torch
 
 try:
-    _TORCHVISION_SCHEMA_LIB = torch.library.Library("torchvision", "DEF")
-    _TORCHVISION_SCHEMA_LIB.define("nms(Tensor dets, Tensor scores, float iou_threshold) -> Tensor")
+    import torchvision  # noqa: F401
+except RuntimeError as exc:
+    if "operator torchvision::nms does not exist" in str(exc):
+        try:
+            _TORCHVISION_SCHEMA_LIB = torch.library.Library("torchvision", "DEF")
+            _TORCHVISION_SCHEMA_LIB.define("nms(Tensor dets, Tensor scores, float iou_threshold) -> Tensor")
+        except Exception:
+            pass
 except Exception:
     pass
 
@@ -67,8 +73,8 @@ def parse_args():
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--qa-spec", default=None)
     parser.add_argument("--replace-default-qa", action="store_true")
-    parser.add_argument("--model-path", default="/workspace/home/AAAI 2027/models/BAAI/Emu3.5")
-    parser.add_argument("--vq-path", default="/workspace/home/AAAI 2027/models/BAAI/Emu3.5-VisionTokenizer")
+    parser.add_argument("--model-path", default="model/Emu3.5")
+    parser.add_argument("--vq-path", default="model/Emu3.5-VisionTokenizer")
     parser.add_argument("--tokenizer-path", default="./src/tokenizer_emu3_ibq")
     parser.add_argument("--vq-type", default="ibq")
     parser.add_argument("--model-device", default="auto")

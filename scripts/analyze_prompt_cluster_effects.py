@@ -48,10 +48,10 @@ REGION_METRICS = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sample-index", default="../research_logs/real_ume_sample_index.csv")
-    parser.add_argument("--labels", default="../research_logs/manual_sample_judgments.jsonl")
-    parser.add_argument("--trace-dir", default="../research_logs/region_labeled_entropy_traces")
-    parser.add_argument("--out-dir", default="../research_logs/prompt_cluster_effects")
+    parser.add_argument("--sample-index", default="data/real_ume/real_ume_sample_index.csv")
+    parser.add_argument("--labels", default="data/real_ume/manual_sample_judgments.jsonl")
+    parser.add_argument("--trace-dir", default="outputs/research_logs/region_labeled_entropy_traces")
+    parser.add_argument("--out-dir", default="outputs/research_logs/prompt_cluster_effects")
     return parser.parse_args()
 
 

@@ -45,11 +45,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--readback-run-dir", required=True)
     parser.add_argument(
         "--poster-data",
-        default="/workspace/home/AAAI 2027/modal-aphasia/misc/real_world_data/posters-1.json",
+        default="data/modal_aphasia/posters-1.json",
     )
     parser.add_argument(
         "--seed40-summary-csv",
-        default="/workspace/home/AAAI 2027/research_logs/modal_aphasia_posters/seed40/poster_entropy_summary.csv",
+        default="outputs/research_logs/modal_aphasia_posters/seed40/poster_entropy_summary.csv",
     )
     parser.add_argument("--out-dir", required=True)
     return parser.parse_args()

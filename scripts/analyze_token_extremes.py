@@ -56,8 +56,8 @@ SUMMARY_COLUMNS = [
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--trace-dir", default="../research_logs/region_labeled_entropy_traces")
-    parser.add_argument("--out-dir", default="../research_logs/token_extremes")
+    parser.add_argument("--trace-dir", default="outputs/research_logs/region_labeled_entropy_traces")
+    parser.add_argument("--out-dir", default="outputs/research_logs/token_extremes")
     parser.add_argument("--top-k", type=int, default=100)
     return parser.parse_args()
 

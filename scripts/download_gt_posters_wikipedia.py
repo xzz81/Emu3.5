@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import mimetypes
@@ -84,7 +85,7 @@ POSTERS = [
 ]
 
 
-OUT_DIR = Path("/workspace/home/AAAI 2027/research_logs/modal_aphasia_posters/gt_posters_wikipedia_20260531")
+DEFAULT_OUT_DIR = Path("data/modal_aphasia_posters/gt_posters_wikipedia_20260531")
 USER_AGENT = "AAAI2027-entropy-research/0.1 (local poster GT comparison)"
 SSL_CONTEXT = ssl._create_unverified_context()
 
@@ -123,15 +124,23 @@ def download(url: str, path: Path) -> None:
     raise RuntimeError(f"failed to download after retries: {url}") from last_exc
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
+    return parser.parse_args()
+
+
 def main() -> None:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    args = parse_args()
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
     manifest = []
     downloaded_at = time.strftime("%Y-%m-%dT%H:%M:%S%z")
     for poster in POSTERS:
         image_url = poster["image_url"]
         ext = Path(urllib.parse.urlparse(image_url).path).suffix.lower() or ".jpg"
         local_name = f"poster_{poster['poster_id']:02d}_{slug(poster['poster_name'])}{ext}"
-        local_path = OUT_DIR / local_name
+        local_path = out_dir / local_name
         download(image_url, local_path)
         time.sleep(1)
         with Image.open(local_path) as image:
@@ -151,12 +160,12 @@ def main() -> None:
                 "local_path": str(local_path),
             }
         )
-    (OUT_DIR / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    with (OUT_DIR / "manifest.csv").open("w", encoding="utf-8", newline="") as f:
+    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    with (out_dir / "manifest.csv").open("w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(manifest[0].keys()))
         writer.writeheader()
         writer.writerows(manifest)
-    print(f"[INFO] downloaded {len(manifest)} poster files to {OUT_DIR}")
+    print(f"[INFO] downloaded {len(manifest)} poster files to {out_dir}")
 
 
 if __name__ == "__main__":
