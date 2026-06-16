@@ -3,6 +3,23 @@ set -euo pipefail
 
 mkdir -p model
 
+find_python() {
+  if [[ -n "${PYTHON_BIN:-}" ]]; then
+    echo "${PYTHON_BIN}"
+    return
+  fi
+  if command -v python3 >/dev/null 2>&1; then
+    command -v python3
+    return
+  fi
+  if command -v python >/dev/null 2>&1; then
+    command -v python
+    return
+  fi
+  echo "[ERROR] python3 or python is required when huggingface-cli is unavailable" >&2
+  return 1
+}
+
 download_repo() {
   local repo_id="$1"
   local target_dir="$2"
@@ -20,7 +37,9 @@ download_repo() {
     return
   fi
 
-  python - "$repo_id" "$target_dir" <<'PY'
+  local python_bin
+  python_bin="$(find_python)"
+  "$python_bin" - "$repo_id" "$target_dir" <<'PY'
 import sys
 from huggingface_hub import snapshot_download
 
